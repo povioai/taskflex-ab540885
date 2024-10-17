@@ -1,0 +1,115 @@
+core:
+  stage: ${func:stage}
+  release: ${func:release}
+  service: robodev-api
+
+app:
+  stage: local
+  version: '<<RELEASE>>'
+  release: ${func:release}
+  buildTime: ${func:timestamp}
+  runQueueWorkers: 'true'
+  apiBaseUrl: 'http://localhost:3001'
+  frontendUrl: 'http://localhost:3000'
+
+http:
+  port: '3001'
+  hostname: '0.0.0.0'
+  cors:
+    all: 'true'
+    maxAge: 3600
+  log: 'true'
+  prefix: /api
+  openapi:
+    mode: runtime
+    path: docs
+    title: Robodev API
+    description: API Documentation
+  host: 0.0.0.0
+
+logger:
+  output: 'console'
+  level: 'debug' # default log level
+  contexts:
+    # per context log level
+    InstanceLoader: 'warn'
+    RouterExplorer: 'warn'
+    HttpException: 'log'
+
+swagger:
+  prefix: 'docs'
+  # username:
+  # password:
+
+sentry:
+  dsn: ''
+
+adminjs:
+  enabled: true
+  path: admin
+  email: admin@example.com
+  password: password
+  devPort: 3030
+  pgBossQueues: []
+
+queue-system:
+  maxThreadCount: 1
+  batchSize: 1
+  sleep: 1000
+  concurrency: 10
+  debug: false
+
+prisma:
+  url: postgresql://admin:admin@localhost:5432/robodev-api
+  log:
+    - query
+    - info
+    - warn
+    - error
+
+webhookMediaValidation:
+  enabled: 'false'
+  callbackHeaderAuthentication: 'string'
+
+auth:
+  saltRounds: '12'
+  accessTokenSecret: 'access-token-secret'
+  accessTokenExpiration: '604800'
+  refreshTokenSecret: 'refresh-token-secret'
+  refreshTokenExpiration: '604800'
+
+authPassword:
+  enabled: 'true'
+  codeLength: '32'
+  codeExpiration: '604800'
+
+authSocialGoogle:
+  clientId: 'string' # DEV: Set this
+  clientSecret: 'string' # DEV: Set this
+  scopes: 'https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile'
+  responseType: 'code'
+
+utilityAuthSocialGoogle:
+  enabled: 'true'
+  frontendUrl: 'http://localhost:3000'
+
+mediaPresignedUrl:
+  uploadFolder: 'uploads'
+  region: 'us-east-1'
+  bucket: 'media'
+  # accessKeyId:
+  # secretAccessKey:
+  # apiEndpoint:
+
+email:
+  region: 'us-east-1'
+  emailFrom: 'email@email.com'
+  # accessKeyId: ''
+  # secretAccessKey: ''
+  # apiEndpoint:
+
+fcm:
+  setupRequired: 'false'
+  projectId: ''
+  privateKey: ''
+  clientEmail: ''

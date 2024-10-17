@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*spec.ts",
+    "**/*.test.ts",
+    "**/*.unit.ts",
+    "adminjs-express",
+    "src/common/logging/pino",
+    "src/common/logging/pino/sentry",
+    "src/common/logging/otel",
+    "src/common/logging/sentry"
+  ]
+}

@@ -1,0 +1,26 @@
+## Configuration for STAGE=robodev-api-dev
+##  - robodev-api-dev.api.template.yml is commited to git and uses ${} functions
+##  - robodev-api-dev.api.resolved.yml is generated on "yarn bootstrap --stage robodev-api-dev"
+##  - robodev-api-dev.api.override.yml can be used for local overrides
+
+core:
+  stage: ${func:stage}
+  release: ${func:release}
+  buildAt: ${env:BUILD_TIMESTAMP}
+  service: robodev-api
+http:
+  openapi:
+    mode: runtime
+    path: docs
+    title: robodev-api
+    description: API Documentation
+logger:
+  output: json
+  level: log
+  contexts:
+    Bootstrap: warn
+    HttpException: warn
+    ExceptionHandler: debug
+    RoutesResolver: warn
+    RouterExplorer: warn
+    NestApplication: warn

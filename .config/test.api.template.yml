@@ -1,0 +1,88 @@
+## Configuration for STAGE=test
+##  - test.api.template.yml is commited to git and uses ${} functions
+##  - test.api.resolved.yml is generated on "yarn bootstrap --stage test"
+##  - test.api.override.yml can be used for local overrides
+
+core:
+  stage: ${func:stage}
+  release: ${func:release}
+  service: robodev-api
+app:
+  stage: local
+  version: '<<RELEASE>>'
+  release: ${func:release}
+  buildTime: ${func:timestamp}
+  runQueueWorkers: 'true'
+  apiBaseUrl: 'http://localhost:3001'
+  frontendUrl: 'http://localhost:3000'
+http:
+  port: 3000
+  host: 0.0.0.0
+  log: true
+  cors:
+    origin: "*"
+  openapi:
+    mode: runtime
+    path: docs
+    title: robodev-api
+    description: API Documentation
+prisma:
+  url: postgresql://admin:admin@localhost:5432/robodev-api
+  log:
+    - query
+    - info
+    - warn
+    - error
+logger:
+  output: console
+  level: debug
+  contexts:
+    Bootstrap: log
+    HttpException: warn
+    ExceptionHandler: debug
+    RoutesResolver: warn
+    RouterExplorer: warn
+    NestApplication: warn
+
+auth:
+  saltRounds: '12'
+  accessTokenSecret: 'access-token-secret'
+  accessTokenExpiration: '604800'
+  refreshTokenSecret: 'refresh-token-secret'
+  refreshTokenExpiration: '604800'
+
+authPassword:
+  enabled: 'true'
+  codeLength: '32'
+  codeExpiration: '604800'
+
+authSocialGoogle:
+  clientId: 'string' # DEV: Set this
+  clientSecret: 'string' # DEV: Set this
+  scopes: 'https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile'
+  responseType: 'code'
+
+utilityAuthSocialGoogle:
+  enabled: 'true'
+  frontendUrl: 'http://localhost:3000'
+
+mediaPresignedUrl:
+  uploadFolder: 'uploads'
+  region: 'us-east-1'
+  bucket: 'media'
+  # accessKeyId:
+  # secretAccessKey:
+  # apiEndpoint:
+
+email:
+  region: 'us-east-1'
+  emailFrom: 'email@email.com'
+  # accessKeyId: ''
+  # secretAccessKey: ''
+  # apiEndpoint:
+
+fcm:
+  setupRequired: 'false'
+  projectId: ''
+  privateKey: ''
+  clientEmail: ''

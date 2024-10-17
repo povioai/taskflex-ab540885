@@ -1,0 +1,3 @@
+// TODO: This needs environmental variable setup...
+export const ADMIN_BASE_URL = '/';
+export const API_BACKEND_BASE_URL = '/api';

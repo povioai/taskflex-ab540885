@@ -1,0 +1,40 @@
+# ECS Deploy configuration file for STAGE=robodev-api-dev
+# @see https://github.com/povio/ecs-deploy-cli/tree/v4?tab=readme-ov-file#configure
+
+accountId: "000000000000"
+region: us-east-1
+taskFamily: robodev-api-dev-api
+serviceName: robodev-api-dev-api
+clusterName: robodev-api-dev
+
+# build and upload to ecr with `ecs-deploy build api --stage robodev-api-dev`
+build:
+  - name: api
+    repoName: robodev-api-dev-api
+    platform: linux/amd64
+
+    # resolved at build time
+    environmentValues:
+      - name: RELEASE
+        valueFrom: "func:release"
+      - name: BUILD_TIMESTAMP
+        valueFrom: "func:timestamp"
+
+# deploy to ecs with `ecs-deploy deploy --stage robodev-api-dev`
+taskDefinition:
+  - name: default
+    template: arn:aws:ssm:::parameter/robodev-api-dev/api/task-definition
+    containerDefinitions:
+      - name: api
+        image: api
+        environmentValues:
+          - name: DEPLOY_TIMESTAMP
+            valueFrom: "func:timestamp"
+
+# resolved at runtime using `ecs-deploy config api --stage dev`
+configs:
+  - name: api
+    destination: ./.config/robodev-api-dev.api.resolved.yml
+    values:
+      - name: "@"
+        configFrom: api.template
