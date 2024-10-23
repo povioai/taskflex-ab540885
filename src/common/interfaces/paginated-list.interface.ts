@@ -7,4 +7,5 @@ export interface IPaginatedList<ItemType, QueryOptionsFilter = undefined> {
   filter?: QueryOptionsFilter;
   items: ItemType[];
   totalItems: number;
+  totalPages?: number;
 }

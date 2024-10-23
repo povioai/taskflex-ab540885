@@ -1,14 +1,18 @@
-import { Inject, Injectable } from '@nestjs/common';
-
+import { Injectable, Inject } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '~common/exceptions';
 import { LoggerService } from '~common/logging';
-
 import { ITaskCreate } from '~modules/task-management/interfaces/task-create.interface';
 import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.interface';
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
+import { IPaginatedTasksDto } from '~modules/task-management/interfaces/paginated-tasks-dto.interface';
+import { IPaginationMetadata } from '~modules/task-management/interfaces/pagination-metadata.interface';
 
 @Injectable()
 export class TaskManagementService {
+  private readonly DEFAULT_PAGE = 1;
+  private readonly DEFAULT_PAGE_SIZE = 10;
+
   constructor(
     private readonly logger: LoggerService,
     @Inject('TaskRepository')
@@ -71,12 +75,38 @@ export class TaskManagementService {
     await this.taskRepository.deleteTask(taskId);
   }
 
+  async getPaginatedTasks(page: number, tasksPerPage: number): Promise<IPaginatedTasksDto> {
+    this.validatePaginationParameters(page, tasksPerPage);
+    const paginatedTasks = await this.taskRepository.getPaginatedTasks(page, tasksPerPage);
+    if (!paginatedTasks.tasks.length) {
+      throw new NotFoundException('No tasks found for the given page', 'tasks_not_found');
+    }
+    return paginatedTasks;
+  }
+
+  async getDefaultPaginatedTasks(): Promise<IPaginatedTasksDto> {
+    const paginatedTasks = await this.taskRepository.getPaginatedTasks(this.DEFAULT_PAGE, this.DEFAULT_PAGE_SIZE);
+    if (!paginatedTasks.tasks.length) {
+      throw new NotFoundException('No tasks found for the default page', 'tasks_not_found');
+    }
+    return paginatedTasks;
+  }
+
   private validateTaskInput(task: { title: string; description: string }): void {
     if (!task.title.trim()) {
       throw new Error('Title should be a non-empty string');
     }
     if (!task.description.trim()) {
       throw new Error('Description should be a non-empty string');
+    }
+  }
+
+  private validatePaginationParameters(page: number, tasksPerPage: number): void {
+    if (page < 1) {
+      throw new BadRequestException('Page number must be greater than zero', 'invalid_page_number');
+    }
+    if (tasksPerPage < 1 || tasksPerPage > 100) {
+      throw new BadRequestException('Tasks per page must be between 1 and 100', 'invalid_tasks_per_page');
     }
   }
 }

@@ -5,10 +5,17 @@ import { ITaskCreate } from '~modules/task-management/interfaces/task-create.int
 import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.interface';
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
+import { IPaginatedListQuery } from '~common/interfaces/paginated-list.query.interface';
+import { IPaginatedList } from '~common/interfaces/paginated-list.interface';
+import { IPaginatedTasksDto } from '~modules/task-management/interfaces/paginated-tasks-dto.interface';
+import { TaskManagementService } from '~modules/task-management/interfaces/pagination.interface';
 
 @Injectable()
 export class TaskPrismaRepository implements TaskRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paginationService: TaskManagementService
+  ) {}
 
   async findTaskById(id: string): Promise<ITask | undefined> {
     const task = await this.prisma.client.task.findUnique({
@@ -46,6 +53,47 @@ export class TaskPrismaRepository implements TaskRepository {
     await this.prisma.client.task.delete({
       where: { id },
     });
+  }
+
+  async listTasks(query: IPaginatedListQuery): Promise<IPaginatedList<ITask>> {
+    const { page, limit } = query;
+    const offset = (page - 1) * limit;
+
+    const taskModels = await this.prisma.client.task.findMany({
+      skip: offset,
+      take: limit,
+    });
+    const count = await this.prisma.client.task.count();
+
+    const items = taskModels.map((task) => this.toDomain(task));
+
+    const paginationMetadata = this.paginationService.getPaginationMetadata(count, limit, page);
+
+    return {
+      page,
+      limit,
+      totalItems: paginationMetadata.totalItems,
+      totalPages: paginationMetadata.totalPages,
+      items,
+    };
+  }
+
+  async getPaginatedTasks(page: number, tasksPerPage: number): Promise<IPaginatedTasksDto> {
+    const offset = (page - 1) * tasksPerPage;
+
+    const taskModels = await this.prisma.client.task.findMany({
+      skip: offset,
+      take: tasksPerPage,
+    });
+    const totalTasks = await this.prisma.client.task.count();
+
+    const tasks = taskModels.map((task) => this.toDomain(task));
+    const paginationMetadata = this.paginationService.getPaginationMetadata(totalTasks, tasksPerPage, page);
+
+    return {
+      tasks,
+      paginationMetadata,
+    };
   }
 
   private toDomain(task: Task): ITask {
