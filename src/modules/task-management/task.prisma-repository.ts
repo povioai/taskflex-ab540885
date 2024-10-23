@@ -50,7 +50,7 @@ export class TaskPrismaRepository implements TaskRepository {
     });
   }
 
-  async getTasksWithPagination(page: number, tasksPerPage: number): Promise<{ tasks: ITask[], pagination: PaginationMetadata }> {
+  async getPaginatedTasks(page: number, tasksPerPage: number): Promise<{ tasks: ITask[], pagination: PaginationMetadata }> {
     const skip = (page - 1) * tasksPerPage;
     const [tasks, totalTasks] = await this.prisma.client.$transaction([
       this.prisma.client.task.findMany({
