@@ -1,11 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-
 import { LoggerService } from '~common/logging';
-
 import { ITaskCreate } from '~modules/task-management/interfaces/task-create.interface';
 import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.interface';
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
+import { NotFoundException } from '~common/exceptions';
+import { PaginationMetadata } from '~modules/task-management/interfaces/pagination.interface';
+
+interface PaginatedTasksDto {
+  tasks: ITask[];
+  pagination: PaginationMetadata;
+}
 
 @Injectable()
 export class TaskManagementService {
@@ -78,5 +83,31 @@ export class TaskManagementService {
     if (!task.description.trim()) {
       throw new Error('Description should be a non-empty string');
     }
+  }
+
+  async getPaginatedTasks(page: number, tasksPerPage: number): Promise<PaginatedTasksDto> {
+    if (page < 1 || tasksPerPage < 1) {
+      throw new NotFoundException('Invalid pagination parameters', 'invalid_pagination');
+    }
+
+    const { tasks, pagination } = await this.taskRepository.getPaginatedTasks(page, tasksPerPage);
+
+    if (tasks.length === 0 && page > 1) {
+      throw new NotFoundException('No tasks found for the given page', 'no_tasks_found');
+    }
+
+    const paginationMetadata: PaginationMetadata = {
+      totalTasks: pagination.totalTasks,
+      tasksPerPage,
+      currentPage: page,
+      totalPages: pagination.totalPages,
+      hasNextPage: pagination.hasNextPage,
+      hasPreviousPage: pagination.hasPreviousPage,
+    };
+
+    return {
+      tasks,
+      pagination: paginationMetadata,
+    };
   }
 }
