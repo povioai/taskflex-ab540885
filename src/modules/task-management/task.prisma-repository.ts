@@ -6,7 +6,7 @@ import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.int
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
 import { PaginationMetadata } from '~modules/task-management/interfaces/pagination.interface';
-import { getPaginationMetadata } from '~modules/task-management/utils/pagination.utils.js';
+import { getPaginationMetadata } from '~modules/task-management/utils/pagination.utils';
 
 @Injectable()
 export class TaskPrismaRepository implements TaskRepository {
