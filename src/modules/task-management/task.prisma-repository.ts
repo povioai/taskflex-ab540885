@@ -5,6 +5,8 @@ import { ITaskCreate } from '~modules/task-management/interfaces/task-create.int
 import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.interface';
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
+import { IPaginatedListQuery } from '~common/interfaces/paginated-list.query.interface';
+import { IPaginatedList } from '~common/interfaces/paginated-list.interface';
 
 @Injectable()
 export class TaskPrismaRepository implements TaskRepository {
@@ -46,6 +48,26 @@ export class TaskPrismaRepository implements TaskRepository {
     await this.prisma.client.task.delete({
       where: { id },
     });
+  }
+
+  async listTasks(query: IPaginatedListQuery): Promise<IPaginatedList<ITask>> {
+    const { page, limit } = query;
+    const offset = (page - 1) * limit;
+
+    const taskModels = await this.prisma.client.task.findMany({
+      skip: offset,
+      take: limit,
+    });
+    const count = await this.prisma.client.task.count();
+
+    const items = taskModels.map((task) => this.toDomain(task));
+
+    return {
+      page,
+      limit,
+      totalItems: count,
+      items,
+    };
   }
 
   private toDomain(task: Task): ITask {
