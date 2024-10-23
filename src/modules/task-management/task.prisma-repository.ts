@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { Task } from '@prisma/client';
 import { PrismaService } from '~database/prisma';
-import { ITaskCreate } from '~modules/task-management/interfaces/task-create.interface';
-import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.interface';
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
+import { IPaginatedTasks } from '~modules/task-management/interfaces/paginated-tasks-dto.interface';
+import { TaskManagement } from '~modules/task-management/interfaces/pagination.interface';
+import { ITaskCreate } from '~modules/task-management/interfaces/task-create.interface';
+import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.interface';
 
 @Injectable()
 export class TaskPrismaRepository implements TaskRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly taskManagement: TaskManagement) {}
 
   async findTaskById(id: string): Promise<ITask | undefined> {
     const task = await this.prisma.client.task.findUnique({
@@ -46,6 +48,26 @@ export class TaskPrismaRepository implements TaskRepository {
     await this.prisma.client.task.delete({
       where: { id },
     });
+  }
+
+  async getPaginatedTasks(page: number, tasksPerPage: number): Promise<IPaginatedTasks> {
+    const offset = (page - 1) * tasksPerPage;
+
+    const taskModels = await this.prisma.client.task.findMany({
+      skip: offset,
+      take: tasksPerPage,
+    });
+
+    const totalTasks = await this.prisma.client.task.count();
+
+    const tasks = taskModels.map((task) => this.toDomain(task));
+
+    const paginationMetadata = this.taskManagement.getPaginationMetadata(totalTasks, tasksPerPage, page);
+
+    return {
+      tasks,
+      paginationMetadata,
+    };
   }
 
   private toDomain(task: Task): ITask {

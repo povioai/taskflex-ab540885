@@ -1,11 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-
+import { NotFoundException } from '~common/exceptions';
 import { LoggerService } from '~common/logging';
-
 import { ITaskCreate } from '~modules/task-management/interfaces/task-create.interface';
 import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.interface';
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
+import { IPaginatedTasks } from '~modules/task-management/interfaces/paginated-tasks-dto.interface';
+import { TaskManagement } from '~modules/task-management/interfaces/pagination.interface';
 
 @Injectable()
 export class TaskManagementService {
@@ -13,6 +14,7 @@ export class TaskManagementService {
     private readonly logger: LoggerService,
     @Inject('TaskRepository')
     private readonly taskRepository: TaskRepository,
+    private readonly taskManagement: TaskManagement,
   ) {}
 
   async createTask(task: ITaskCreate): Promise<ITask> {
@@ -78,5 +80,24 @@ export class TaskManagementService {
     if (!task.description.trim()) {
       throw new Error('Description should be a non-empty string');
     }
+  }
+
+  async getPaginatedTasks(page: number, tasksPerPage: number): Promise<IPaginatedTasks> {
+    const paginatedTasks = await this.taskRepository.getPaginatedTasks(page, tasksPerPage);
+
+    if (!paginatedTasks) {
+      throw new NotFoundException('No tasks found', 'TASKS_NOT_FOUND');
+    }
+
+    const paginationMetadata = this.taskManagement.getPaginationMetadata(
+      paginatedTasks.paginationMetadata.totalItems,
+      tasksPerPage,
+      page
+    );
+
+    return {
+      tasks: paginatedTasks.tasks,
+      paginationMetadata,
+    };
   }
 }
