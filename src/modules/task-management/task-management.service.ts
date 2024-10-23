@@ -6,9 +6,13 @@ import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.int
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
 import { IPaginatedTasksDto } from '~modules/task-management/interfaces/paginated-tasks-dto.interface';
+import { IPaginationMetadata } from '~modules/task-management/interfaces/pagination-metadata.interface';
 
 @Injectable()
 export class TaskManagementService {
+  private readonly DEFAULT_PAGE = 1;
+  private readonly DEFAULT_PAGE_SIZE = 10;
+
   constructor(
     private readonly logger: LoggerService,
     @Inject('TaskRepository')
@@ -76,6 +80,14 @@ export class TaskManagementService {
     const paginatedTasks = await this.taskRepository.getPaginatedTasks(page, tasksPerPage);
     if (!paginatedTasks.tasks.length) {
       throw new NotFoundException('No tasks found for the given page', 'tasks_not_found');
+    }
+    return paginatedTasks;
+  }
+
+  async getDefaultPaginatedTasks(): Promise<IPaginatedTasksDto> {
+    const paginatedTasks = await this.taskRepository.getPaginatedTasks(this.DEFAULT_PAGE, this.DEFAULT_PAGE_SIZE);
+    if (!paginatedTasks.tasks.length) {
+      throw new NotFoundException('No tasks found for the default page', 'tasks_not_found');
     }
     return paginatedTasks;
   }
