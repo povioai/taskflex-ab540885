@@ -7,6 +7,7 @@ import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
 import { IPaginatedListQuery } from '~common/interfaces/paginated-list.query.interface';
 import { IPaginatedList } from '~common/interfaces/paginated-list.interface';
+import { IPaginatedTasksDto } from '~modules/task-management/interfaces/paginated-tasks-dto.interface';
 import { TaskManagementService } from '~modules/task-management/interfaces/pagination.interface';
 
 @Injectable()
@@ -74,6 +75,24 @@ export class TaskPrismaRepository implements TaskRepository {
       totalItems: paginationMetadata.totalItems,
       totalPages: paginationMetadata.totalPages,
       items,
+    };
+  }
+
+  async getPaginatedTasks(page: number, tasksPerPage: number): Promise<IPaginatedTasksDto> {
+    const offset = (page - 1) * tasksPerPage;
+
+    const taskModels = await this.prisma.client.task.findMany({
+      skip: offset,
+      take: tasksPerPage,
+    });
+    const totalTasks = await this.prisma.client.task.count();
+
+    const tasks = taskModels.map((task) => this.toDomain(task));
+    const paginationMetadata = this.paginationService.getPaginationMetadata(totalTasks, tasksPerPage, page);
+
+    return {
+      tasks,
+      paginationMetadata,
     };
   }
 
