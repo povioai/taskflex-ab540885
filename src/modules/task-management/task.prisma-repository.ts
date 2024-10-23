@@ -72,6 +72,7 @@ export class TaskPrismaRepository implements TaskRepository {
       page,
       limit,
       totalItems: paginationMetadata.totalItems,
+      totalPages: paginationMetadata.totalPages,
       items,
     };
   }
