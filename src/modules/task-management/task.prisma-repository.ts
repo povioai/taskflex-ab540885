@@ -7,10 +7,14 @@ import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
 import { IPaginatedListQuery } from '~common/interfaces/paginated-list.query.interface';
 import { IPaginatedList } from '~common/interfaces/paginated-list.interface';
+import { TaskManagementService } from '~modules/task-management/interfaces/pagination.interface';
 
 @Injectable()
 export class TaskPrismaRepository implements TaskRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paginationService: TaskManagementService
+  ) {}
 
   async findTaskById(id: string): Promise<ITask | undefined> {
     const task = await this.prisma.client.task.findUnique({
@@ -62,10 +66,12 @@ export class TaskPrismaRepository implements TaskRepository {
 
     const items = taskModels.map((task) => this.toDomain(task));
 
+    const paginationMetadata = this.paginationService.getPaginationMetadata(count, limit, page);
+
     return {
       page,
       limit,
-      totalItems: count,
+      totalItems: paginationMetadata.totalItems,
       items,
     };
   }
