@@ -1,14 +1,23 @@
-import { IPaginationParameters } from 'src/modules/task-management/interfaces/pagination-parameters.interface';
+import { IPaginationMetadata } from 'src/modules/task-management/interfaces/pagination-metadata.interface';
 
 export interface TaskManagement {
-  getPaginationParameters(page: number, tasksPerPage: number): IPaginationParameters;
+  getPaginationMetadata(totalTasks: number, tasksPerPage: number, currentPage: number): IPaginationMetadata;
 }
 
 class TaskManagementImpl implements TaskManagement {
-  getPaginationParameters(page: number, tasksPerPage: number): IPaginationParameters {
+  getPaginationMetadata(totalTasks: number, tasksPerPage: number, currentPage: number): IPaginationMetadata {
+    const totalPages = Math.ceil(totalTasks / tasksPerPage);
+    const itemCount = tasksPerPage;
+    const totalItems = totalTasks;
+    const hasPreviousPage = currentPage > 1;
+    const hasNextPage = currentPage < totalPages;
+
     return {
-      page,
-      pageSize: tasksPerPage,
+      totalItems,
+      itemCount,
+      itemsPerPage: tasksPerPage,
+      totalPages,
+      currentPage,
     };
   }
 }
