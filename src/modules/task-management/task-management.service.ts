@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-
+import { NotFoundException } from '~common/exceptions';
 import { LoggerService } from '~common/logging';
-
 import { ITaskCreate } from '~modules/task-management/interfaces/task-create.interface';
 import { ITaskUpdate } from '~modules/task-management/interfaces/task-update.interface';
 import { ITask } from '~modules/task-management/interfaces/task.interface';
 import { TaskRepository } from '~modules/task-management/task.repository';
+import { IPaginatedTasksDto } from '~modules/task-management/interfaces/paginated-tasks-dto.interface';
 
 @Injectable()
 export class TaskManagementService {
@@ -69,6 +69,14 @@ export class TaskManagementService {
     }
 
     await this.taskRepository.deleteTask(taskId);
+  }
+
+  async getPaginatedTasks(page: number, tasksPerPage: number): Promise<IPaginatedTasksDto> {
+    const paginatedTasks = await this.taskRepository.getPaginatedTasks(page, tasksPerPage);
+    if (!paginatedTasks.tasks.length) {
+      throw new NotFoundException('No tasks found for the given page', 'tasks_not_found');
+    }
+    return paginatedTasks;
   }
 
   private validateTaskInput(task: { title: string; description: string }): void {
